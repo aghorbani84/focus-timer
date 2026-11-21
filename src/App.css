@@ -1,12 +1,28 @@
-/* Focus Timer — hand-written vanilla CSS, dark polished theme */
+/* Focus Timer — Stageshow redesign.
+ *
+ * Look (from dark-hero + close-up + dynamic-island):
+ * - Depth from surface steps on near-black, not shadow: ground #07080b,
+ *   card one step lighter, chrome one step lighter again, hairline on top.
+ * - One lit color: the mode accent (focus red / short-break green /
+ *   long-break blue). Everything else is gray.
+ * - The timer ring is the single focal object, drawn large with its
+ *   window chrome; session controls are the row under it; live state
+ *   lives on one compact pill (dynamic-island shape) that changes
+ *   in place — the pill never moves, only its dot and words change.
+ * - Proportion system: phi (1.618). Spacing scale 8 / 13 / 21 / 34 / 55,
+ *   type scale 13 / 21 / 34 / 55, ring 300px with 76px time (300:76 ~ phi^3).
+ */
 
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #1c2330;
-  --border: #2a3342;
-  --text: #e6edf3;
+  --bg: #07080b;
+  --surface: #10141b;
+  --surface-2: #161b24;
+  --well: #05060a;
+  --border: #232a36;
+  --border-soft: #1b212c;
+  --text: #eef1f6;
   --muted: #8b949e;
+  --muted-2: #6b7684;
   --focus: #f85149;
   --focus-soft: rgba(248, 81, 73, 0.14);
   --short: #3fb950;
@@ -14,7 +30,12 @@
   --long: #58a6ff;
   --long-soft: rgba(88, 166, 255, 0.14);
   --accent: var(--focus);
-  --radius: 16px;
+  --radius: 21px;
+  --sp-1: 8px;
+  --sp-2: 13px;
+  --sp-3: 21px;
+  --sp-4: 34px;
+  --sp-5: 55px;
 }
 
 * {
@@ -38,22 +59,73 @@ body {
 
 .app {
   min-height: 100vh;
-  max-width: 760px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 32px 20px 48px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--sp-4);
 }
 
 .app--focus {
   --accent: var(--focus);
+  --accent-soft: var(--focus-soft);
 }
 .app--shortBreak {
   --accent: var(--short);
+  --accent-soft: var(--short-soft);
 }
 .app--longBreak {
   --accent: var(--long);
+  --accent-soft: var(--long-soft);
+}
+
+/* Window chrome — the close-up's framing: traffic lights + title bar */
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 2px var(--sp-2);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.chrome-lights {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.chrome-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.chrome-light:first-child {
+  background: #f85149;
+  opacity: 0.75;
+}
+.chrome-light:nth-child(2) {
+  background: #d29922;
+  opacity: 0.75;
+}
+.chrome-light:nth-child(3) {
+  background: #3fb950;
+  opacity: 0.75;
+}
+
+.chrome-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-2);
+  letter-spacing: 0.02em;
+}
+
+.chrome-spacer {
+  width: 60px;
 }
 
 /* Header */
@@ -62,20 +134,22 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--sp-3);
 }
 
 .title {
   margin: 0;
-  font-size: 2rem;
+  font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .subtitle {
-  margin: 6px 0 0;
+  margin: var(--sp-1) 0 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 .settings-button {
@@ -85,7 +159,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -104,15 +178,15 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: var(--sp-3);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-3);
 }
 
 .section-title {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -122,7 +196,7 @@ body {
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  gap: var(--sp-2);
 }
 
 .field {
@@ -132,7 +206,7 @@ body {
 }
 
 .field-label {
-  font-size: 0.85rem;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -141,9 +215,9 @@ body {
   padding: 9px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--well);
   color: var(--text);
-  font-size: 1rem;
+  font-size: 16px;
   outline: none;
 }
 
@@ -152,8 +226,8 @@ body {
 }
 
 .field-unit {
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--muted-2);
 }
 
 .settings-toggles {
@@ -167,7 +241,7 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  font-size: 0.92rem;
+  font-size: 15px;
 }
 
 .toggle input {
@@ -213,28 +287,51 @@ body {
 
 .settings-note {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 13px;
   color: var(--muted);
+  line-height: 1.5;
 }
 
-/* Timer card */
+/* Timer card — the raised surface the ring sits on */
 
 .timer-card {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  position: relative;
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
   border: 1px solid var(--border);
   border-radius: 24px;
-  padding: 28px 24px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  gap: var(--sp-3);
+  overflow: hidden;
+}
+
+/* One lit glow, in the mode accent, behind the ring — the story's light */
+.timer-card::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  width: 420px;
+  height: 320px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    closest-side,
+    var(--accent-soft),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.timer-card > * {
+  position: relative;
 }
 
 .mode-tabs {
   display: flex;
   gap: 6px;
-  background: var(--bg);
+  background: var(--well);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 5px;
@@ -246,12 +343,12 @@ body {
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition:
     color 0.15s,
-    background 0.15s;
+    background 0.2s;
 }
 
 .mode-tab:hover {
@@ -263,12 +360,57 @@ body {
   color: #fff;
 }
 
-/* Progress ring */
+/* Status pill — dynamic-island shape: one pill, dot + words change in place */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--well);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition:
+    border-color 0.3s,
+    color 0.3s;
+}
+
+.status-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.status-pill--running .status-pill__dot {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-soft);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+    opacity: 0.65;
+  }
+}
+
+/* Progress ring — the focal object, 1.4x the weight of anything else */
 
 .ring-wrap {
   position: relative;
   width: 300px;
   height: 300px;
+  margin-top: var(--sp-2);
 }
 
 .ring {
@@ -283,9 +425,12 @@ body {
 
 .ring-progress {
   fill: none;
-  stroke-width: 10;
+  stroke-width: 12;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
+  transition:
+    stroke-dashoffset 0.5s linear,
+    stroke 0.3s;
+  filter: drop-shadow(0 0 10px var(--accent-soft));
 }
 
 .ring-progress--focus {
@@ -305,29 +450,21 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .time {
-  font-size: 4rem;
+  font-size: 76px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
-.mode-label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
 .cycle {
   display: flex;
   gap: 7px;
-  margin-top: 10px;
+  margin-top: var(--sp-1);
 }
 
 .cycle-dot {
@@ -335,6 +472,9 @@ body {
   height: 9px;
   border-radius: 50%;
   border: 1.5px solid var(--muted);
+  transition:
+    background 0.3s,
+    border-color 0.3s;
 }
 
 .cycle-dot--filled {
@@ -353,7 +493,7 @@ body {
 }
 
 .task-label {
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -365,9 +505,9 @@ body {
   padding: 11px 14px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--well);
   color: var(--text);
-  font-size: 1rem;
+  font-size: 16px;
   outline: none;
 }
 
@@ -375,39 +515,48 @@ body {
   border-color: var(--accent);
 }
 
+.task-input::placeholder {
+  color: var(--muted-2);
+}
+
 .controls {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+  margin-top: var(--sp-1);
 }
 
 .btn {
-  padding: 12px 28px;
+  padding: 12px 21px;
   border-radius: 999px;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
   transition:
     transform 0.1s,
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    filter 0.15s;
 }
 
 .btn:active {
   transform: scale(0.97);
 }
 
+/* The primary action is the 1.4x control of the row */
 .btn-primary {
   background: var(--accent);
   color: #fff;
   min-width: 132px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 14px 34px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.12);
 }
 
 .btn-ghost {
@@ -422,13 +571,14 @@ body {
 
 .hint {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 14px;
   color: var(--muted);
   text-align: center;
   min-height: 1.3em;
+  line-height: 1.5;
 }
 
-/* Stats */
+/* Stats — de-boxed: one surface, cells divided by hairlines, not four cards */
 
 .stats {
   display: flex;
@@ -438,60 +588,92 @@ body {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-}
-
-.stat-card {
+  grid-template-columns: repeat(4, 1fr);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px;
+  overflow: hidden;
+}
+
+.stat-card {
+  padding: var(--sp-3) var(--sp-2);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-items: flex-start;
+}
+
+.stat-card + .stat-card {
+  border-left: 1px solid var(--border-soft);
 }
 
 .stat-value {
-  font-size: 1.9rem;
+  font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-unit {
-  font-size: 0.95rem;
+  font-size: 15px;
   font-weight: 600;
   color: var(--muted);
 }
 
 .stat-label {
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .stat-sub {
-  font-size: 0.82rem;
+  font-size: 13px;
   color: var(--muted);
+  line-height: 1.4;
+}
+
+.stats-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-2);
+  text-align: center;
 }
 
 .footer {
   text-align: center;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card:nth-child(3) {
+    border-left: none;
+  }
+
+  .stat-card:nth-child(n + 3) {
+    border-top: 1px solid var(--border-soft);
+  }
 }
 
 @media (max-width: 480px) {
   .app {
-    padding: 20px 14px 36px;
+    padding: var(--sp-3) 14px 36px;
   }
 
   .title {
-    font-size: 1.6rem;
+    font-size: 26px;
+  }
+
+  .chrome-spacer {
+    width: 0;
   }
 
   .time {
-    font-size: 3.2rem;
+    font-size: 62px;
   }
 
   .ring-wrap {
@@ -506,6 +688,20 @@ body {
 
   .mode-tab {
     padding: 8px 12px;
-    font-size: 0.83rem;
+    font-size: 13px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-pill--running .status-pill__dot {
+    animation: none;
+  }
+
+  .ring-progress {
+    transition: none;
   }
 }

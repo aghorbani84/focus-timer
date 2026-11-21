@@ -173,8 +173,20 @@ export default function App() {
     (_, i) => i < cycleCount,
   )
 
+  const statusText = `${MODE_LABELS[mode]} · ${running ? 'Running' : 'Paused'}`
+
   return (
     <div className={`app app--${mode}`}>
+      <div className="chrome" aria-hidden="true">
+        <span className="chrome-lights">
+          <span className="chrome-light" />
+          <span className="chrome-light" />
+          <span className="chrome-light" />
+        </span>
+        <span className="chrome-title">Focus Timer — Pomodoro</span>
+        <span className="chrome-spacer" />
+      </div>
+
       <header className="header">
         <div>
           <h1 className="title">Focus Timer</h1>
@@ -263,13 +275,20 @@ export default function App() {
           ))}
         </div>
 
+        <div
+          className={`status-pill${running ? ' status-pill--running' : ''}`}
+          role="status"
+        >
+          <span className="status-pill__dot" aria-hidden="true" />
+          {statusText}
+        </div>
+
         <div className="ring-wrap">
           <ProgressRing progress={progress} mode={mode} />
           <div className="ring-center">
             <div className="time" aria-live="off">
               {formatTime(secondsLeft)}
             </div>
-            <div className="mode-label">{MODE_LABELS[mode]}</div>
             <div className="cycle">
               {cycleDots.map((filled, i) => (
                 <span
@@ -349,7 +368,7 @@ export default function App() {
               <span className="stat-unit"> day{streak === 1 ? '' : 's'}</span>
             </div>
             <div className="stat-label">Current streak</div>
-            <div className="stat-sub">Consecutive days with a session</div>
+            <div className="stat-sub">Consecutive days</div>
           </article>
           <article className="stat-card">
             <div className="stat-value">{total.sessions}</div>
@@ -357,6 +376,11 @@ export default function App() {
             <div className="stat-sub">{formatMinutes(total.focusMinutes)} focused overall</div>
           </article>
         </div>
+        {total.sessions === 0 && (
+          <p className="stats-empty">
+            No sessions yet — finish your first focus session to start your streak.
+          </p>
+        )}
       </section>
 
       <footer className="footer">
