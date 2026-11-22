@@ -1,11 +1,11 @@
 /* Global base styles — component styles live in App.css */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 html {
-  background: #07080b;
+  background: var(--bg, #f8fafc);
 }
 
 body {

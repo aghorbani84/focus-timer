@@ -32,6 +32,38 @@ export const DEFAULT_SETTINGS: Settings = {
   autoStartFocus: false,
 }
 
+// ---------------------------------------------------------------------------
+// Theme atoms (Phase B redesign — Achaemenid × Modern, each light × dark)
+// Persisted with the shared showcase keys from the theme spec.
+// ---------------------------------------------------------------------------
+
+export type ShowcaseStyle = 'achaemenid' | 'modern'
+export type ShowcaseMode = 'light' | 'dark'
+
+function systemMode(): ShowcaseMode {
+  if (typeof window === 'undefined') return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
+export const themeStyleAtom = atomWithStorage<ShowcaseStyle>(
+  'showcase-style',
+  'modern',
+)
+
+export const themeModeAtom = atomWithStorage<ShowcaseMode>(
+  'showcase-mode',
+  systemMode(),
+)
+
+/** True once the user has picked a mode explicitly; until then the
+ *  matchMedia listener in App keeps the mode synced to the OS. */
+export const themeModeExplicitAtom = atomWithStorage<boolean>(
+  'showcase-mode-explicit',
+  false,
+)
+
 export const MODE_LABELS: Record<TimerMode, string> = {
   focus: 'Focus',
   shortBreak: 'Short Break',

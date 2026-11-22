@@ -1,41 +1,162 @@
-/* Focus Timer — Stageshow redesign.
+/* Focus Timer — Phase B redesign: Achaemenid × Modern, each light × dark.
  *
- * Look (from dark-hero + close-up + dynamic-island):
- * - Depth from surface steps on near-black, not shadow: ground #07080b,
- *   card one step lighter, chrome one step lighter again, hairline on top.
- * - One lit color: the mode accent (focus red / short-break green /
- *   long-break blue). Everything else is gray.
- * - The timer ring is the single focal object, drawn large with its
- *   window chrome; session controls are the row under it; live state
- *   lives on one compact pill (dynamic-island shape) that changes
- *   in place — the pill never moves, only its dot and words change.
- * - Proportion system: phi (1.618). Spacing scale 8 / 13 / 21 / 34 / 55,
- *   type scale 13 / 21 / 34 / 55, ring 300px with 76px time (300:76 ~ phi^3).
+ * One semantic token system (--bg, --surface, --text, --muted, --line,
+ * --accent, --on-accent, --secondary). The four combos are driven by
+ * :root[data-style][data-mode] blocks; components read tokens only.
+ * Palettes are the tailwindshades MCP scales (oklch); never hand-invented.
+ * Achaemenid: sandstone/basalt, Cinzel headings, double gold rule under the
+ * header, fluted-column header pattern, one small Faravahar accent.
+ * Modern: slate + indigo accent, Inter, 0.75rem radius, subtle shadows.
+ * Timer-mode hues (focus/short/long) are functional, not theme accent:
+ * they recolor only the ring, the status dot and cycle dots.
  */
 
 :root {
-  --bg: #07080b;
-  --surface: #10141b;
-  --surface-2: #161b24;
-  --well: #05060a;
-  --border: #232a36;
-  --border-soft: #1b212c;
-  --text: #eef1f6;
-  --muted: #8b949e;
-  --muted-2: #6b7684;
-  --focus: #f85149;
-  --focus-soft: rgba(248, 81, 73, 0.14);
-  --short: #3fb950;
-  --short-soft: rgba(63, 185, 80, 0.14);
-  --long: #58a6ff;
-  --long-soft: rgba(88, 166, 255, 0.14);
-  --accent: var(--focus);
-  --radius: 21px;
+  /* Palettes (tailwindshades MCP, Tailwind v4 oklch) */
+  --gold-50: oklch(98.7% 0.019 114.232);
+  --gold-100: oklch(96.9% 0.051 115.213);
+  --gold-200: oklch(93.8% 0.093 113.56);
+  --gold-300: oklch(89.4% 0.132 110.131);
+  --gold-400: oklch(83.7% 0.144 103.956);
+  --gold-500: oklch(77.7% 0.133 98.067);
+  --gold-600: oklch(65.9% 0.117 87.854);
+  --gold-700: oklch(53.8% 0.098 78.462);
+  --gold-800: oklch(46.5% 0.083 73.927);
+  --gold-900: oklch(41.6% 0.069 69.728);
+  --gold-950: oklch(28.6% 0.048 65.833);
+  --lapis-50: oklch(97% 0.013 248.974);
+  --lapis-100: oklch(93.9% 0.031 249.955);
+  --lapis-200: oklch(89.5% 0.057 248.498);
+  --lapis-300: oklch(82.8% 0.1 245.596);
+  --lapis-400: oklch(73.3% 0.157 248.588);
+  --lapis-500: oklch(65.4% 0.203 253.792);
+  --lapis-600: oklch(58.6% 0.236 257.251);
+  --lapis-700: oklch(53.4% 0.234 258.746);
+  --lapis-800: oklch(47.7% 0.192 260.008);
+  --lapis-900: oklch(43.9% 0.141 259.892);
+  --lapis-950: oklch(28.2% 0.088 262.305);
+  --accent-50: oklch(96.2% 0.016 272.314);
+  --accent-100: oklch(93% 0.03 272.788);
+  --accent-200: oklch(87% 0.057 274.039);
+  --accent-300: oklch(78.5% 0.101 274.713);
+  --accent-400: oklch(67.3% 0.16 276.935);
+  --accent-500: oklch(58.5% 0.205 277.117);
+  --accent-600: oklch(51.1% 0.23 276.966);
+  --accent-700: oklch(45.7% 0.211 277.023);
+  --accent-800: oklch(39.8% 0.171 277.366);
+  --accent-900: oklch(35.9% 0.126 278.697);
+  --accent-950: oklch(25.7% 0.079 281.288);
+
   --sp-1: 8px;
   --sp-2: 13px;
   --sp-3: 21px;
   --sp-4: 34px;
   --sp-5: 55px;
+}
+
+/* --- The four combinations ------------------------------------------- */
+
+:root[data-style='modern'][data-mode='light'] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --well: #f1f5f9;
+  --text: #0f172a;
+  --muted: #475569;
+  --muted-2: #64748b;
+  --line: #e2e8f0;
+  --border: #e2e8f0;
+  --border-soft: #e8edf3;
+  --accent: #4f46e5;
+  --on-accent: #ffffff;
+  --secondary: #4f46e5;
+  --radius: 0.75rem;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+  color-scheme: light;
+}
+
+:root[data-style='modern'][data-mode='dark'] {
+  --bg: #0b1220;
+  --surface: #111c2e;
+  --surface-raised: #1a2942;
+  --well: #0b1220;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --muted-2: #7d8ea6;
+  --line: #1e293b;
+  --border: #1e293b;
+  --border-soft: #182742;
+  --accent: var(--accent-400);
+  --on-accent: var(--accent-950);
+  --secondary: var(--accent-400);
+  --radius: 0.75rem;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+:root[data-style='achaemenid'][data-mode='light'] {
+  --bg: #f5efe3;
+  --surface: #fffdf6;
+  --surface-raised: #fbf6ea;
+  --well: #fbf6ea;
+  --text: #2b2118;
+  --muted: #7a6a55;
+  --muted-2: #97836a;
+  --line: #d9c9a8;
+  --border: #d9c9a8;
+  --border-soft: #e6dcc4;
+  --accent: var(--gold-600);
+  --on-accent: var(--gold-950);
+  --secondary: var(--lapis-700);
+  --radius: 0.375rem;
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Segoe UI', system-ui, sans-serif;
+  --shadow: 0 1px 0 rgba(43, 33, 24, 0.06), 0 6px 18px rgba(43, 33, 24, 0.08);
+  color-scheme: light;
+}
+
+:root[data-style='achaemenid'][data-mode='dark'] {
+  --bg: #171310;
+  --surface: #221b15;
+  --surface-raised: #2c241b;
+  --well: #171310;
+  --text: #ece0c8;
+  --muted: #a89880;
+  --muted-2: #8a7a63;
+  --line: #3d3226;
+  --border: #3d3226;
+  --border-soft: #32291f;
+  --accent: var(--gold-400);
+  --on-accent: var(--gold-950);
+  --secondary: var(--lapis-400);
+  --radius: 0.375rem;
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Segoe UI', system-ui, sans-serif;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+/* Timer-mode hues, keyed on mode only (light/dark legibility). */
+:root[data-mode='light'] {
+  --focus: #dc2626;
+  --focus-soft: rgba(220, 38, 38, 0.12);
+  --short: #15803d;
+  --short-soft: rgba(21, 128, 61, 0.12);
+  --long: #1d4ed8;
+  --long-soft: rgba(29, 78, 216, 0.12);
+}
+
+:root[data-mode='dark'] {
+  --focus: #f87171;
+  --focus-soft: rgba(248, 113, 113, 0.16);
+  --short: #4ade80;
+  --short-soft: rgba(74, 222, 128, 0.16);
+  --long: #60a5fa;
+  --long-soft: rgba(96, 165, 250, 0.16);
 }
 
 * {
@@ -44,14 +165,7 @@
 
 body {
   margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -68,64 +182,16 @@ body {
 }
 
 .app--focus {
-  --accent: var(--focus);
-  --accent-soft: var(--focus-soft);
+  --mode-accent: var(--focus);
+  --mode-accent-soft: var(--focus-soft);
 }
 .app--shortBreak {
-  --accent: var(--short);
-  --accent-soft: var(--short-soft);
+  --mode-accent: var(--short);
+  --mode-accent-soft: var(--short-soft);
 }
 .app--longBreak {
-  --accent: var(--long);
-  --accent-soft: var(--long-soft);
-}
-
-/* Window chrome — the close-up's framing: traffic lights + title bar */
-
-.chrome {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: 0 2px var(--sp-2);
-  border-bottom: 1px solid var(--border-soft);
-}
-
-.chrome-lights {
-  display: flex;
-  gap: var(--sp-1);
-}
-
-.chrome-light {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--border);
-}
-
-.chrome-light:first-child {
-  background: #f85149;
-  opacity: 0.75;
-}
-.chrome-light:nth-child(2) {
-  background: #d29922;
-  opacity: 0.75;
-}
-.chrome-light:nth-child(3) {
-  background: #3fb950;
-  opacity: 0.75;
-}
-
-.chrome-title {
-  flex: 1;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted-2);
-  letter-spacing: 0.02em;
-}
-
-.chrome-spacer {
-  width: 60px;
+  --mode-accent: var(--long);
+  --mode-accent-soft: var(--long-soft);
 }
 
 /* Header */
@@ -135,14 +201,56 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line);
+}
+
+:root[data-style='achaemenid'] .header {
+  /* Thin double gold rule under the header (two 1px lines, 3px apart). */
+  border-bottom: 3px double var(--accent);
+  /* Fluted-column motif: faint vertical ribs across the header. */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 14px,
+    color-mix(in srgb, var(--line) 40%, transparent) 14px 15px,
+    transparent 15px 30px
+  );
+  background-size: 100% 100%;
+  padding-top: var(--sp-1);
+  padding-left: var(--sp-1);
+  padding-right: var(--sp-1);
+}
+
+.title-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.faravahar {
+  display: none;
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--accent);
+}
+
+:root[data-style='achaemenid'] .faravahar {
+  display: block;
 }
 
 .title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 34px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
+}
+
+:root[data-style='achaemenid'] .title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .subtitle {
@@ -152,15 +260,98 @@ body {
   line-height: 1.4;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Theme switcher — always visible in the header */
+
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.style-segmented {
+  display: flex;
+  gap: 2px;
+  background: var(--well);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.style-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.style-option svg {
+  width: 15px;
+  height: 15px;
+}
+
+.style-option:hover {
+  color: var(--text);
+}
+
+.style-option--active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mode-toggle:hover {
+  border-color: var(--accent);
+  background: var(--surface-raised);
+}
+
+.mode-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .settings-button {
   flex-shrink: 0;
   padding: 9px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
+  font-family: var(--font-body);
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -169,7 +360,13 @@ body {
 
 .settings-button:hover {
   border-color: var(--accent);
-  background: var(--surface-2);
+  background: var(--surface-raised);
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Settings panel */
@@ -178,6 +375,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: var(--sp-3);
   display: flex;
   flex-direction: column;
@@ -186,6 +384,7 @@ body {
 
 .section-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -213,11 +412,12 @@ body {
 .field-input {
   width: 100%;
   padding: 9px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--well);
   color: var(--text);
   font-size: 16px;
+  font-family: var(--font-body);
   outline: none;
 }
 
@@ -292,13 +492,14 @@ body {
   line-height: 1.5;
 }
 
-/* Timer card — the raised surface the ring sits on */
+/* Timer card */
 
 .timer-card {
   position: relative;
-  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: var(--sp-4) var(--sp-3) var(--sp-4);
   display: flex;
   flex-direction: column;
@@ -307,7 +508,7 @@ body {
   overflow: hidden;
 }
 
-/* One lit glow, in the mode accent, behind the ring — the story's light */
+/* One lit glow, in the mode accent, behind the ring */
 .timer-card::before {
   content: '';
   position: absolute;
@@ -318,7 +519,7 @@ body {
   transform: translateX(-50%);
   background: radial-gradient(
     closest-side,
-    var(--accent-soft),
+    var(--mode-accent-soft),
     transparent 70%
   );
   pointer-events: none;
@@ -333,18 +534,19 @@ body {
   gap: 6px;
   background: var(--well);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 5px;
 }
 
 .mode-tab {
   padding: 8px 18px;
   border: none;
-  border-radius: 999px;
+  border-radius: calc(var(--radius) - 2px);
   background: transparent;
   color: var(--muted);
   font-size: 14px;
   font-weight: 600;
+  font-family: var(--font-body);
   cursor: pointer;
   transition:
     color 0.15s,
@@ -357,10 +559,10 @@ body {
 
 .mode-tab--active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
-/* Status pill — dynamic-island shape: one pill, dot + words change in place */
+/* Status pill */
 
 .status-pill {
   display: inline-flex;
@@ -383,7 +585,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--mode-accent);
   flex-shrink: 0;
   transition: background 0.3s;
 }
@@ -395,7 +597,7 @@ body {
 @keyframes pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 var(--accent-soft);
+    box-shadow: 0 0 0 0 var(--mode-accent-soft);
     opacity: 1;
   }
   50% {
@@ -404,7 +606,7 @@ body {
   }
 }
 
-/* Progress ring — the focal object, 1.4x the weight of anything else */
+/* Progress ring */
 
 .ring-wrap {
   position: relative;
@@ -425,22 +627,13 @@ body {
 
 .ring-progress {
   fill: none;
+  stroke: var(--mode-accent);
   stroke-width: 12;
   stroke-linecap: round;
   transition:
     stroke-dashoffset 0.5s linear,
     stroke 0.3s;
-  filter: drop-shadow(0 0 10px var(--accent-soft));
-}
-
-.ring-progress--focus {
-  stroke: var(--focus);
-}
-.ring-progress--shortBreak {
-  stroke: var(--short);
-}
-.ring-progress--longBreak {
-  stroke: var(--long);
+  filter: drop-shadow(0 0 10px var(--mode-accent-soft));
 }
 
 .ring-center {
@@ -454,11 +647,16 @@ body {
 }
 
 .time {
+  font-family: var(--font-display);
   font-size: 76px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   line-height: 1;
+}
+
+:root[data-style='achaemenid'] .time {
+  letter-spacing: 0.02em;
 }
 
 .cycle {
@@ -478,8 +676,8 @@ body {
 }
 
 .cycle-dot--filled {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--mode-accent);
+  border-color: var(--mode-accent);
 }
 
 /* Task + controls */
@@ -503,11 +701,12 @@ body {
 .task-input {
   width: 100%;
   padding: 11px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--well);
   color: var(--text);
   font-size: 16px;
+  font-family: var(--font-body);
   outline: none;
 }
 
@@ -530,9 +729,10 @@ body {
 
 .btn {
   padding: 12px 21px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 16px;
   font-weight: 700;
+  font-family: var(--font-body);
   cursor: pointer;
   border: 1px solid transparent;
   transition:
@@ -546,17 +746,20 @@ body {
   transform: scale(0.97);
 }
 
-/* The primary action is the 1.4x control of the row */
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   min-width: 132px;
   padding: 14px 34px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow);
 }
 
 .btn-primary:hover {
   filter: brightness(1.12);
+}
+
+:root[data-style='achaemenid'] .btn-primary:hover {
+  filter: brightness(1.08);
 }
 
 .btn-ghost {
@@ -578,7 +781,7 @@ body {
   line-height: 1.5;
 }
 
-/* Stats — de-boxed: one surface, cells divided by hairlines, not four cards */
+/* Stats */
 
 .stats {
   display: flex;
@@ -592,6 +795,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
@@ -608,8 +812,9 @@ body {
 }
 
 .stat-value {
+  font-family: var(--font-display);
   font-size: 34px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -666,10 +871,6 @@ body {
 
   .title {
     font-size: 26px;
-  }
-
-  .chrome-spacer {
-    width: 0;
   }
 
   .time {

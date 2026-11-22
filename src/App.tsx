@@ -15,14 +15,130 @@ import {
   streakAtom,
   switchModeAtom,
   taskLabelAtom,
+  themeModeAtom,
+  themeModeExplicitAtom,
+  themeStyleAtom,
   tickAtom,
   todayStatsAtom,
   totalStatsAtom,
   weekStatsAtom,
   type Settings,
+  type ShowcaseMode,
+  type ShowcaseStyle,
   type TimerMode,
 } from './store'
 import './App.css'
+
+/* Inline lucide-style icons (stroke, 24×24) — no icon dependency. */
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  )
+}
+
+function LandmarkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="3" x2="21" y1="22" y2="22" />
+      <line x1="6" x2="6" y1="18" y2="11" />
+      <line x1="10" x2="10" y1="18" y2="11" />
+      <line x1="14" x2="14" y1="18" y2="11" />
+      <line x1="18" x2="18" y1="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+    </svg>
+  )
+}
+
+function SparklesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+      <path d="M5 3v4" />
+      <path d="M19 17v4" />
+      <path d="M3 5h4" />
+      <path d="M17 19h4" />
+    </svg>
+  )
+}
+
+/** One tasteful Faravahar silhouette (gold, header only, Achaemenid only). */
+function FaravaharIcon() {
+  return (
+    <svg className="faravahar" width="52" height="28" viewBox="0 0 64 28" fill="currentColor" aria-hidden="true">
+      <circle cx="32" cy="14" r="4.5" />
+      <circle cx="32" cy="14" r="2" fill="var(--bg)" />
+      <path d="M27 12 C18 4 8 3 2 6 C8 8 12 10 15 13 L27 13 Z" />
+      <path d="M37 12 C46 4 56 3 62 6 C56 8 52 10 49 13 L37 13 Z" />
+      <path d="M27 16 C18 24 8 25 2 22 C8 20 12 18 15 15 L27 15 Z" />
+      <path d="M37 16 C46 24 56 25 62 22 C56 20 52 18 49 15 L37 15 Z" />
+      <path d="M30 19 L28 27 L31 27 L32 20 L33 27 L36 27 L34 19 Z" />
+    </svg>
+  )
+}
+
+function ThemeSwitcher({
+  style,
+  mode,
+  onStyle,
+  onToggleMode,
+}: {
+  style: ShowcaseStyle
+  mode: ShowcaseMode
+  onStyle: (s: ShowcaseStyle) => void
+  onToggleMode: () => void
+}) {
+  return (
+    <div className="theme-switcher">
+      <div className="style-segmented" role="group" aria-label="Visual style">
+        <button
+          type="button"
+          className={`style-option${style === 'achaemenid' ? ' style-option--active' : ''}`}
+          aria-pressed={style === 'achaemenid'}
+          onClick={() => onStyle('achaemenid')}
+        >
+          <LandmarkIcon />
+          Achaemenid
+        </button>
+        <button
+          type="button"
+          className={`style-option${style === 'modern' ? ' style-option--active' : ''}`}
+          aria-pressed={style === 'modern'}
+          onClick={() => onStyle('modern')}
+        >
+          <SparklesIcon />
+          Modern
+        </button>
+      </div>
+      <button
+        type="button"
+        className="mode-toggle"
+        aria-label="Toggle dark mode"
+        aria-pressed={mode === 'dark'}
+        onClick={onToggleMode}
+      >
+        {mode === 'dark' ? <SunIcon /> : <MoonIcon />}
+      </button>
+    </div>
+  )
+}
 
 const MODES: TimerMode[] = ['focus', 'shortBreak', 'longBreak']
 
@@ -150,6 +266,36 @@ export default function App() {
 
   const [showSettings, setShowSettings] = useState(false)
 
+  // --- Theme: Jotai persisted atoms + matchMedia sync -------------------
+  const [themeStyle, setThemeStyle] = useAtom(themeStyleAtom)
+  const [themeMode, setThemeMode] = useAtom(themeModeAtom)
+  const [themeModeExplicit, setThemeModeExplicit] = useAtom(
+    themeModeExplicitAtom,
+  )
+
+  // Apply data-style / data-mode to <html> whenever the atoms change.
+  useEffect(() => {
+    const root = document.documentElement
+    root.setAttribute('data-style', themeStyle)
+    root.setAttribute('data-mode', themeMode)
+    root.style.colorScheme = themeMode
+  }, [themeStyle, themeMode])
+
+  // Sync with the OS preference until the user picks a mode explicitly.
+  useEffect(() => {
+    if (themeModeExplicit) return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => setThemeMode(mq.matches ? 'dark' : 'light')
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [themeModeExplicit, setThemeMode])
+
+  const toggleThemeMode = () => {
+    setThemeModeExplicit(true)
+    setThemeMode(themeMode === 'dark' ? 'light' : 'dark')
+  }
+
   // One-second heartbeat while the timer is running.
   useEffect(() => {
     if (!running) return
@@ -177,29 +323,30 @@ export default function App() {
 
   return (
     <div className={`app app--${mode}`}>
-      <div className="chrome" aria-hidden="true">
-        <span className="chrome-lights">
-          <span className="chrome-light" />
-          <span className="chrome-light" />
-          <span className="chrome-light" />
-        </span>
-        <span className="chrome-title">Focus Timer — Pomodoro</span>
-        <span className="chrome-spacer" />
-      </div>
-
       <header className="header">
-        <div>
-          <h1 className="title">Focus Timer</h1>
-          <p className="subtitle">A Pomodoro timer for deep, distraction-free work.</p>
+        <div className="title-block">
+          <FaravaharIcon />
+          <div>
+            <h1 className="title">Focus Timer</h1>
+            <p className="subtitle">A Pomodoro timer for deep, distraction-free work.</p>
+          </div>
         </div>
-        <button
-          type="button"
-          className="settings-button"
-          onClick={() => setShowSettings((v) => !v)}
-          aria-expanded={showSettings}
-        >
-          {showSettings ? 'Close settings' : 'Settings'}
-        </button>
+        <div className="header-controls">
+          <ThemeSwitcher
+            style={themeStyle}
+            mode={themeMode}
+            onStyle={setThemeStyle}
+            onToggleMode={toggleThemeMode}
+          />
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() => setShowSettings((v) => !v)}
+            aria-expanded={showSettings}
+          >
+            {showSettings ? 'Close settings' : 'Settings'}
+          </button>
+        </div>
       </header>
 
       {showSettings && (
