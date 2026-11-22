@@ -4,12 +4,14 @@ import {
   MODE_LABELS,
   cycleCountAtom,
   durationAtom,
+  longestSessionAtom,
   modeAtom,
   pauseAtom,
   progressAtom,
   resetAtom,
   runningAtom,
   secondsLeftAtom,
+  sessionHistoryAtom,
   settingsAtom,
   startAtom,
   streakAtom,
@@ -21,7 +23,7 @@ import {
   tickAtom,
   todayStatsAtom,
   totalStatsAtom,
-  weekStatsAtom,
+  type SessionEntry,
   type Settings,
   type ShowcaseMode,
   type ShowcaseStyle,
@@ -244,6 +246,59 @@ function ToggleField({
   )
 }
 
+function formatSessionTime(endedAt: string): string {
+  const date = new Date(endedAt)
+  const time = date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const now = new Date()
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  if (sameDay) return `Today, ${time}`
+  return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${time}`
+}
+
+/** Newest-first list of completed sessions, from the persisted log. */
+function SessionHistory({ entries }: { entries: SessionEntry[] }) {
+  return (
+    <section className="history" aria-label="Session history">
+      <h2 className="section-title">Session history</h2>
+      {entries.length === 0 ? (
+        <p className="history-empty">
+          No completed sessions yet — your finished focus and break sessions
+          will appear here with their real times.
+        </p>
+      ) : (
+        <ul className="history-list">
+          {entries.slice(0, 8).map((entry) => (
+            <li key={entry.id} className="history-item">
+              <span
+                className={`history-dot history-dot--${entry.mode}`}
+                aria-hidden="true"
+              />
+              <span className="history-main">
+                <span className="history-mode">
+                  {MODE_LABELS[entry.mode]}
+                </span>
+                {entry.task && (
+                  <span className="history-task">{entry.task}</span>
+                )}
+              </span>
+              <span className="history-minutes">{entry.minutes} min</span>
+              <time className="history-time" dateTime={entry.endedAt}>
+                {formatSessionTime(entry.endedAt)}
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 export default function App() {
   const mode = useAtomValue(modeAtom)
   const [secondsLeft] = useAtom(secondsLeftAtom)
@@ -254,9 +309,10 @@ export default function App() {
   const duration = useAtomValue(durationAtom)
   const progress = useAtomValue(progressAtom)
   const today = useAtomValue(todayStatsAtom)
-  const week = useAtomValue(weekStatsAtom)
   const total = useAtomValue(totalStatsAtom)
   const streak = useAtomValue(streakAtom)
+  const longest = useAtomValue(longestSessionAtom)
+  const history = useAtomValue(sessionHistoryAtom)
 
   const start = useSetAtom(startAtom)
   const pause = useSetAtom(pauseAtom)
@@ -303,12 +359,22 @@ export default function App() {
     return () => window.clearInterval(id)
   }, [running, tick])
 
-  // Keep the browser tab title in sync with the countdown.
+  // Datasheet title: live numbers from the persisted session state.
+  const datasheetTitle = `Focus Timer v2 — ${total.sessions} sessions · ${total.focusMinutes} focus min · streak ${streak}`
+
+  // Keep the browser tab title in sync with the countdown; the datasheet
+  // title is always present so the tab itself states the live counts.
   useEffect(() => {
     document.title = running
-      ? `${formatTime(secondsLeft)} · ${MODE_LABELS[mode]} — Focus Timer`
-      : 'Focus Timer — Pomodoro'
-  }, [secondsLeft, running, mode])
+      ? `${formatTime(secondsLeft)} · ${datasheetTitle}`
+      : datasheetTitle
+  }, [secondsLeft, running, datasheetTitle])
+
+  // Proof strip: live counts from the atom state, honest when empty.
+  const proofStrip =
+    total.sessions === 0
+      ? '0 sessions yet — start your first focus'
+      : `${today.sessions} sessions · ${today.focusMinutes} focus min today · ${streak}-day streak`
 
   const updateSettings = (patch: Partial<Settings>) => {
     setSettings({ ...settings, ...patch })
@@ -327,7 +393,7 @@ export default function App() {
         <div className="title-block">
           <FaravaharIcon />
           <div>
-            <h1 className="title">Focus Timer</h1>
+            <h1 className="title">{datasheetTitle}</h1>
             <p className="subtitle">A Pomodoro timer for deep, distraction-free work.</p>
           </div>
         </div>
@@ -348,6 +414,10 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      <div className="proof-strip" role="status">
+        {proofStrip}
+      </div>
 
       {showSettings && (
         <section className="settings" aria-label="Timer settings">
@@ -406,8 +476,9 @@ export default function App() {
         </section>
       )}
 
-      <main className="timer-card">
-        <div className="mode-tabs" role="tablist" aria-label="Timer mode">
+      <div className="main-grid">
+        <main className="timer-card">
+          <div className="mode-tabs" role="tablist" aria-label="Timer mode">
           {MODES.map((m) => (
             <button
               key={m}
@@ -494,41 +565,51 @@ export default function App() {
               : 'Pick one task, then start the timer.'
             : 'Take a real break — step away from the screen.'}
         </p>
-      </main>
+        </main>
 
-      <section className="stats" aria-label="Focus statistics">
-        <h2 className="section-title">Your progress</h2>
-        <div className="stats-grid">
-          <article className="stat-card">
-            <div className="stat-value">{today.sessions}</div>
-            <div className="stat-label">Sessions today</div>
-            <div className="stat-sub">{formatMinutes(today.focusMinutes)} focused</div>
-          </article>
-          <article className="stat-card">
-            <div className="stat-value">{week.sessions}</div>
-            <div className="stat-label">Sessions this week</div>
-            <div className="stat-sub">{formatMinutes(week.focusMinutes)} focused</div>
-          </article>
-          <article className="stat-card">
-            <div className="stat-value">
-              {streak}
-              <span className="stat-unit"> day{streak === 1 ? '' : 's'}</span>
+        <aside className="side-panel">
+          <section className="stats" aria-label="Focus statistics">
+            <h2 className="section-title">Your progress</h2>
+            <div className="stats-grid">
+              <article className="stat-card">
+                <div className="stat-value">{today.sessions}</div>
+                <div className="stat-label">Sessions today</div>
+                <div className="stat-sub">{formatMinutes(today.focusMinutes)} focused</div>
+              </article>
+              <article className="stat-card">
+                <div className="stat-value">
+                  {formatMinutes(total.focusMinutes)}
+                </div>
+                <div className="stat-label">Total focus time</div>
+                <div className="stat-sub">
+                  {total.sessions} session{total.sessions === 1 ? '' : 's'} overall
+                </div>
+              </article>
+              <article className="stat-card">
+                <div className="stat-value">
+                  {streak}
+                  <span className="stat-unit"> day{streak === 1 ? '' : 's'}</span>
+                </div>
+                <div className="stat-label">Current streak</div>
+                <div className="stat-sub">Consecutive days</div>
+              </article>
+              <article className="stat-card">
+                <div className="stat-value">
+                  {longest === 0 ? '—' : formatMinutes(longest)}
+                </div>
+                <div className="stat-label">Longest session</div>
+                <div className="stat-sub">
+                  {longest === 0
+                    ? 'No focus session yet'
+                    : 'Single focus session'}
+                </div>
+              </article>
             </div>
-            <div className="stat-label">Current streak</div>
-            <div className="stat-sub">Consecutive days</div>
-          </article>
-          <article className="stat-card">
-            <div className="stat-value">{total.sessions}</div>
-            <div className="stat-label">Total sessions</div>
-            <div className="stat-sub">{formatMinutes(total.focusMinutes)} focused overall</div>
-          </article>
-        </div>
-        {total.sessions === 0 && (
-          <p className="stats-empty">
-            No sessions yet — finish your first focus session to start your streak.
-          </p>
-        )}
-      </section>
+          </section>
+
+          <SessionHistory entries={history} />
+        </aside>
+      </div>
 
       <footer className="footer">
         Progress is saved locally in your browser — no account, no tracking.

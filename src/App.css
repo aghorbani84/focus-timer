@@ -173,7 +173,7 @@ body {
 
 .app {
   min-height: 100vh;
-  max-width: 720px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: var(--sp-4) var(--sp-3) var(--sp-5);
   display: flex;
@@ -242,10 +242,10 @@ body {
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 :root[data-style='achaemenid'] .title {
@@ -288,6 +288,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
   padding: 7px 12px;
   border: none;
   border-radius: calc(var(--radius) - 2px);
@@ -320,8 +321,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -344,6 +345,7 @@ body {
 
 .settings-button {
   flex-shrink: 0;
+  min-height: 44px;
   padding: 9px 16px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -367,6 +369,45 @@ button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Proof strip — live counts from the persisted session state, rendered
+ * in the UI (not claimed in a README). Honest when empty. */
+
+.proof-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-align: center;
+}
+
+/* Main grid: timer beside the stats + history side panel (desktop). */
+
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Settings panel */
@@ -539,6 +580,7 @@ input:focus-visible {
 }
 
 .mode-tab {
+  min-height: 44px;
   padding: 8px 18px;
   border: none;
   border-radius: calc(var(--radius) - 2px);
@@ -791,29 +833,25 @@ input:focus-visible {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
 .stat-card {
-  padding: var(--sp-3) var(--sp-2);
+  padding: var(--sp-2);
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: flex-start;
-}
-
-.stat-card + .stat-card {
-  border-left: 1px solid var(--border-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -837,31 +875,109 @@ input:focus-visible {
   line-height: 1.4;
 }
 
-.stats-empty {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted-2);
-  text-align: center;
-}
-
 .footer {
   text-align: center;
   font-size: 13px;
   color: var(--muted-2);
 }
 
-@media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Session history */
 
-  .stat-card:nth-child(3) {
-    border-left: none;
-  }
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  .stat-card:nth-child(n + 3) {
-    border-top: 1px solid var(--border-soft);
-  }
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.history-item + .history-item {
+  border-top: 1px solid var(--border-soft);
+}
+
+.history-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.history-dot--focus {
+  background: var(--focus);
+}
+
+.history-dot--shortBreak {
+  background: var(--short);
+}
+
+.history-dot--longBreak {
+  background: var(--long);
+}
+
+.history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.history-mode {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.history-task {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-minutes {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.history-time {
+  font-size: 12px;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.history-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-2);
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
 }
 
 @media (max-width: 480px) {

@@ -22,6 +22,21 @@ export interface DayStats {
 /** History keyed by local date string `YYYY-MM-DD`. */
 export type History = Record<string, DayStats>
 
+/**
+ * One completed interval, recorded with its real end time.
+ * Never seeded — entries only appear when a timer actually finishes.
+ */
+export interface SessionEntry {
+  id: string
+  mode: TimerMode
+  /** Planned duration of the interval in minutes. */
+  minutes: number
+  /** Task label at completion (focus sessions only; '' otherwise). */
+  task: string
+  /** ISO timestamp of completion. */
+  endedAt: string
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
@@ -35,6 +50,10 @@ export const DEFAULT_SETTINGS: Settings = {
 // ---------------------------------------------------------------------------
 // Theme atoms (Phase B redesign — Achaemenid × Modern, each light × dark)
 // Persisted with the shared showcase keys from the theme spec.
+// getOnInit: true is load-bearing: without it the atoms start at their
+// defaults (mode = OS, explicit = false) and App's matchMedia sync effect
+// overwrites a persisted dark choice with the OS preference on reload.
+// Reading storage synchronously at init keeps the saved choice intact.
 // ---------------------------------------------------------------------------
 
 export type ShowcaseStyle = 'achaemenid' | 'modern'
@@ -50,11 +69,15 @@ function systemMode(): ShowcaseMode {
 export const themeStyleAtom = atomWithStorage<ShowcaseStyle>(
   'showcase-style',
   'modern',
+  undefined,
+  { getOnInit: true },
 )
 
 export const themeModeAtom = atomWithStorage<ShowcaseMode>(
   'showcase-mode',
   systemMode(),
+  undefined,
+  { getOnInit: true },
 )
 
 /** True once the user has picked a mode explicitly; until then the
@@ -62,6 +85,8 @@ export const themeModeAtom = atomWithStorage<ShowcaseMode>(
 export const themeModeExplicitAtom = atomWithStorage<boolean>(
   'showcase-mode-explicit',
   false,
+  undefined,
+  { getOnInit: true },
 )
 
 export const MODE_LABELS: Record<TimerMode, string> = {
@@ -73,6 +98,7 @@ export const MODE_LABELS: Record<TimerMode, string> = {
 const STORAGE_KEYS = {
   settings: 'focus-timer:settings',
   history: 'focus-timer:history',
+  sessionLog: 'focus-timer:session-log',
   taskLabel: 'focus-timer:task-label',
   mode: 'focus-timer:mode',
   secondsLeft: 'focus-timer:seconds-left',
@@ -89,6 +115,13 @@ export const settingsAtom = atomWithStorage<Settings>(
 )
 
 export const historyAtom = atomWithStorage<History>(STORAGE_KEYS.history, {})
+
+/** Per-session log: every completed focus/break interval with its real
+ *  timestamp. Empty for a fresh install — never seeded with fake data. */
+export const sessionLogAtom = atomWithStorage<SessionEntry[]>(
+  STORAGE_KEYS.sessionLog,
+  [],
+)
 
 export const taskLabelAtom = atomWithStorage<string>(STORAGE_KEYS.taskLabel, '')
 
@@ -199,6 +232,32 @@ export const streakAtom = atom((get) => {
   return streak
 })
 
+/** Session log, newest first. */
+export const sessionHistoryAtom = atom((get) =>
+  [...get(sessionLogAtom)].sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1)),
+)
+
+/** Longest completed focus session in minutes (0 when none yet). */
+export const longestSessionAtom = atom((get) => {
+  let longest = 0
+  for (const entry of get(sessionLogAtom)) {
+    if (entry.mode === 'focus' && entry.minutes > longest) {
+      longest = entry.minutes
+    }
+  }
+  return longest
+})
+
+function newSessionId(): string {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
+    return crypto.randomUUID()
+  }
+  return `s-${Date.now()}-${Math.floor(Math.random() * 1e9)}`
+}
+
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
@@ -230,6 +289,18 @@ export const switchModeAtom = atom(null, (get, set, mode: TimerMode) => {
 export const completeSessionAtom = atom(null, (get, set) => {
   const mode = get(modeAtom)
   const settings = get(settingsAtom)
+
+  // Record the finished interval in the session log with its real end time.
+  set(sessionLogAtom, [
+    ...get(sessionLogAtom),
+    {
+      id: newSessionId(),
+      mode,
+      minutes: durationForMode(mode, settings) / 60,
+      task: mode === 'focus' ? get(taskLabelAtom) : '',
+      endedAt: new Date().toISOString(),
+    },
+  ])
 
   if (mode === 'focus') {
     const today = localDateKey(new Date())
