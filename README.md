@@ -1,60 +1,74 @@
 # Focus Timer
 
-A polished Pomodoro focus timer built with React, TypeScript, and Vite.
+**A Pomodoro timer with configurable sessions, daily stats, and streaks.**
 
-## What it does
+[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://aghorbani84.github.io/focus-timer/)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Jotai](https://img.shields.io/badge/state-Jotai-000000)
+[![GitHub stars](https://img.shields.io/github/stars/aghorbani84/focus-timer?style=flat)](https://github.com/aghorbani84/focus-timer/stargazers)
 
-- **Pomodoro timer** with three modes: Focus, Short Break, and Long Break.
-- **Configurable durations** for each mode, plus how many focus sessions
-  trigger a long break — all adjustable in the Settings panel.
-- **Start / Pause / Resume / Reset**, plus skip buttons to jump between
-  focus and break.
-- **Circular progress ring** that fills as the session runs, colored per mode,
-  with dots showing progress toward the next long break.
-- **Session counting and stats**: sessions and minutes focused today, this
-  week, and in total, plus a **streak** of consecutive days with at least one
-  completed focus session.
-- **Sound cue on completion**, synthesized with the Web Audio API — no audio
-  files needed. It can be toggled off in Settings.
-- **Task label** for the current session, shown under the timer while you
-  focus.
+**Live demo:** https://aghorbani84.github.io/focus-timer/
+
+## Overview
+
+Focus Timer runs Pomodoro cycles in the browser and keeps track of how much you've focused. Settings,
+timer state, and stats are persisted to `localStorage`; there is no account, tracking, or backend.
+
+## Features
+
+- **Three modes**: Focus, Short Break, and Long Break, with configurable durations and long-break interval.
+- **Controls**: start, pause, resume, reset, and skip between focus and break.
+- **Progress ring** colored per mode, with dots showing progress toward the next long break.
+- **Stats**: sessions and minutes focused today, this week, and in total, plus a daily streak.
+- **Completion chime** synthesized with the Web Audio API (can be turned off).
+- **Task label** for the current session.
 - **Auto-start** options for breaks and focus sessions.
-- **localStorage persistence**: settings, task label, timer state, and all
-  statistics survive reloads. Everything stays in the browser — no account,
-  no tracking, no backend.
-- The browser tab title shows the live countdown while the timer runs.
+- **Live countdown in the tab title** while the timer runs.
+- **Themes**: Achaemenid and Modern styles, each in light and dark.
 
-## Tech used
+## Tech stack
 
-- **React 19 + TypeScript + Vite**
-- **Jotai** for state management (atoms, including `atomWithStorage` for
-  localStorage persistence and derived atoms for stats and streaks)
-- **Vanilla CSS** (hand-written, dark theme, responsive)
-- **Web Audio API** for the completion chime
+| Area | Choice |
+| --- | --- |
+| UI | React 19, TypeScript |
+| Build | Vite 8 |
+| State | Jotai (`atomWithStorage`, derived atoms) |
+| Styling | Hand-written CSS |
+| Audio | Web Audio API |
+| Deploy | GitHub Actions → GitHub Pages |
 
-## How to run
+## Getting started
+
+Requires Node.js 20 or newer and npm.
 
 ```bash
+git clone https://github.com/aghorbani84/focus-timer.git
+cd focus-timer
 npm install
-npm run dev
+npm run dev        # http://localhost:5173/focus-timer/
 ```
 
-Then open the URL Vite prints (usually http://localhost:5173).
-
-## Build
-
-```bash
-npm run build
-```
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Type-check and build into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Lint with oxlint |
 
 ## Project structure
 
 ```
 src/
-  App.tsx    # UI: mode tabs, progress ring, controls, settings, stats
-  App.css    # Hand-written vanilla CSS
-  store.ts   # Jotai atoms: settings, timer state machine, stats, streak
-  sound.ts   # Web Audio API completion chime
-  main.tsx   # Entry point
-  index.css  # Global base styles
+  App.tsx     mode tabs, progress ring, controls, settings, stats, theme switcher
+  App.css     component styles
+  store.ts    Jotai atoms: settings, timer state, stats, streak, theme
+  sound.ts    Web Audio completion chime
+  main.tsx    entry point
+.github/workflows/  GitHub Pages deploy
 ```
+
+## Author
+
+Built by [Abolfazl Ghorbani](https://github.com/aghorbani84).
